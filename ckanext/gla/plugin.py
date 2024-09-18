@@ -32,9 +32,9 @@ from .login import ( login )
 
 from flask import has_request_context
 
-TABLE_FORMATS = toolkit.config.get("ckan.harvesters.table_formats").split(" ")
-REPORT_FORMATS = toolkit.config.get("ckan.harvesters.report_formats").split(" ")
-GEOSPATIAL_FORMATS = toolkit.config.get("ckan.harvesters.geospatial_formats").split(" ")
+TABLE_FORMATS = toolkit.config.get("ckan.harvesters.table_formats","csv xls xlsx xlsm tsv spreadsheet tab google-sheet").split(" ")
+REPORT_FORMATS = toolkit.config.get("ckan.harvesters.report_formats","zip html htm pdf docx doc odw").split(" ")
+GEOSPATIAL_FORMATS = toolkit.config.get("ckan.harvesters.geospatial_formats","geojson shp mbtiles kml").split(" ")
 
 def load_config_as_list(key):
     val = toolkit.config.get(key,'')
