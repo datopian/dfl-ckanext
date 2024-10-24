@@ -3,6 +3,7 @@ import re
 from typing import Any
 
 import bleach
+
 from bs4 import BeautifulSoup
 from markupsafe import Markup
 
@@ -123,21 +124,107 @@ def get_site_title(request):
     else:
         return None
 
+allow_listed_tag_attrs = {
+        'h1':[],
+        'h2':[],
+        'h3':[],
+        'h4':[],
+        'h5':[],
+        'h6':[],
+        'h7':[],
+        'a': ['href'],
+        'strong': [],
+        'em': [],
+        'ul': [],
+        'li': [],
+        'ol': [],
+        'table': [],
+        'tr': [],
+        'th': [],
+        'td': [],
+        'thead': [],
+        'tbody': [],
+        'tfoot': [],
+        'caption': [],
+        'div':[],  # TODO consider
+        'img': ['alt','src'],
+        'iframe': ['src'],
+        'iframe':['src'],
+        'p':['class'] # Temporarily allowed but post filter later for specific classes only e.g. dfl_trusted_email_access
+}
 
-def sanitise_markup_for_dataset_page(html: str, pkg_dict) -> str:
+ALLOWED_PROTOCOLS = ['http', 'https', 'mailto', 'data'] # NOTE we don't really allow 'data' we replace it later in post filtering
+
+def sanitise_markup_for_dataset_page(html: str, pkg_dict: dict[str, Any]) -> str:
+    """Sanitise and fix markup in HTML strings for rendering on the
+    dataset page.
+
+    NOTE: we need to allow a subset of markup through for rendering,
+    so we clean it and then post process the cleaned html as best we
+    can.
+
     """
-    Sanitise and fix markup in HTML strings.
-    """
+
+    if not html:
+        return ''
+
+    # Bleach sanitises HTML string by removing unsafe tags and attributes.
+    # It also removes mismatched tags.
+    # NOTE: CSS in style arrtibutes isn't sanitised but can be added through additional dependencies,
+    # see bleach.CSS_SANITIZER.
+
+    html = bleach.clean(html,strip=True, strip_comments=True, attributes=allow_listed_tag_attrs, tags=allow_listed_tag_attrs.keys(),
+                        protocols=ALLOWED_PROTOCOLS)
+
     soup = BeautifulSoup(html, "lxml")
 
-    for data in soup(["style", "script", "iframe", "br"]):
-        data.decompose()
+    for data in soup(allow_listed_tag_attrs.keys()):
+        # If the tag is in the whitelist, filter its attributes
+        if data.name == 'iframe':
+            print(f'Replacing iframe data URLs %s' % pkg_dict.get('name'))
+            # Replace iframe with a link
+            iframe_src = data.get('src', '#')
+            replacement_tag= soup.new_tag("p")
+            replacement_tag.string = "This description contains embedded content "
 
-    return str(soup)
+            # Create <a> tag with href attribute
+            a_tag = soup.new_tag("a", href=iframe_src)
+            a_tag.string = "that can be viewed here"
+            replacement_tag.append(a_tag)
+            replacement_tag.append('.')
+
+            data.replace_with(replacement_tag)
+        elif data.name == 'img' and data.get('src','').startswith('data:'):
+            print(f'Replacing img data URLs %s' % pkg_dict.get('name'))
+            replacement_tag = soup.new_tag('p', **{'class': 'dfl_replaced_image'})
+            replacement_tag.append("[an embedded image cannot be displayed here - ")
+            a_tag = soup.new_tag('a', href=pkg_dict['upstream_url'])
+            a_tag.string = 'view on source site'
+            replacement_tag.append(a_tag)
+            replacement_tag.append(']')
+            data.replace_with(replacement_tag)
+        elif data.name in ['h1','h2','h3','h4','h5','h6','h7']:
+            print(f'Replacing heading with consistent one')
+            text = ''.join(str(child) for child in data.children)
+            text = bleach.clean(text, strip=True, strip_comments=True, tags=[])
+            replacement_tag = soup.new_tag('h3')
+            replacement_tag.string = text
+
+            data.replace_with(replacement_tag)
+        else:
+            pass
+
+    if soup.body:
+        contents = ''.join(str(child) for child in soup.body.children)
+    else:
+        print(pkg_dict['id'])
+        contents = ''
+
+    return contents
 
 def sanitise_markup_for_search_results(html: str) -> str:
     """
-    Sanitise and fix markup in HTML strings for search result context    
+    Sanitise and fix markup in HTML strings for search result context
     """
     soup = BeautifulSoup(html, "lxml")
 
@@ -147,11 +234,10 @@ def sanitise_markup_for_search_results(html: str) -> str:
     # Bleach sanitises HTML string by removing unsafe tags and attributes.
     # It also removes mismatched tags.
     # NOTE: CSS in style arrtibutes isn't sanitised but can be added through additional dependencies,
-    # see bleach.CSS_SANITIZER.    
+    # see bleach.CSS_SANITIZER.
     return bleach.clean(" ".join(soup.stripped_strings), strip=True)
 
     return str(soup)
-
 
 def _sanitise_markup(html: str, remove_tags: bool = True) -> str:
     soup = BeautifulSoup(html, "lxml")
@@ -213,7 +299,7 @@ def orgs_list_for_user(user: str, permission: str = 'read') -> list[dict[str, An
     '''
     context: Context = {'user': user}
     data_dict = { 'permission': permission}
-    orgs = logic.get_action('organization_list_for_user')(context, data_dict)    
+    orgs = logic.get_action('organization_list_for_user')(context, data_dict)
     return orgs
 
 def is_sysadmin():
@@ -221,7 +307,7 @@ def is_sysadmin():
         return True
     else:
         return False
-    
+
 def get_helpers():
     return {
         "get_followed_datasets": followed,
