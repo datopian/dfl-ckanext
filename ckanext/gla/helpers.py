@@ -124,12 +124,20 @@ def get_site_title(request):
         return None
 
 
-def sanitise_markup(html: str, remove_tags: bool = True) -> str:
+def sanitise_markup_for_dataset_page(html: str, pkg_dict) -> str:
     """
     Sanitise and fix markup in HTML strings.
+    """
+    soup = BeautifulSoup(html, "lxml")
 
-    :param remove_tags: If True then remove all html tags from the string and only return the text.
-    If False, keep all tags in bleach's ALLOWED_TAGS list and attributes in ALLOWED_ATTRIBUTES list.
+    for data in soup(["style", "script", "iframe", "br"]):
+        data.decompose()
+
+    return str(soup)
+
+def sanitise_markup_for_search_results(html: str) -> str:
+    """
+    Sanitise and fix markup in HTML strings for search result context    
     """
     soup = BeautifulSoup(html, "lxml")
 
@@ -139,9 +147,8 @@ def sanitise_markup(html: str, remove_tags: bool = True) -> str:
     # Bleach sanitises HTML string by removing unsafe tags and attributes.
     # It also removes mismatched tags.
     # NOTE: CSS in style arrtibutes isn't sanitised but can be added through additional dependencies,
-    # see bleach.CSS_SANITIZER.
-    if remove_tags:
-        return bleach.clean(" ".join(soup.stripped_strings), strip=True)
+    # see bleach.CSS_SANITIZER.    
+    return bleach.clean(" ".join(soup.stripped_strings), strip=True)
 
     return str(soup)
 
