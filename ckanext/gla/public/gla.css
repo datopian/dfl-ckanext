@@ -299,6 +299,14 @@ small {
     text-decoration: none;
 }
 
+p.dfl_replaced_content {
+    border-color: red;
+    border: 1px;
+    border-style: dashed;
+    padding: 0.5em;
+    font-style: italic;
+}
+
 .btn:focus,
 .btn:hover,
 .btn-default:focus,

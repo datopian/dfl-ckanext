@@ -1,5 +1,6 @@
 import os
 import re
+import logging
 from typing import Any
 
 import bleach
@@ -22,6 +23,7 @@ from ckan.lib.helpers import render_markdown as original_render_markdown
 
 site_title = config.get("ckan.site_title", "Default Site Title")
 
+log = logging.getLogger(__name__)
 
 def __page_context(request):
     page_info = {"source": "", "is_search": False}
@@ -146,9 +148,8 @@ allow_listed_tag_attrs = {
         'tbody': [],
         'tfoot': [],
         'caption': [],
-        'div':[],  # TODO consider
+        'div':[], 
         'img': ['alt','src'],
-        'iframe': ['src'],
         'iframe':['src'],
         'p':['class'] # Temporarily allowed but post filter later for specific classes only e.g. dfl_trusted_email_access
 }
@@ -177,34 +178,54 @@ def sanitise_markup_for_dataset_page(html: str, pkg_dict: dict[str, Any]) -> str
                         protocols=ALLOWED_PROTOCOLS)
 
     soup = BeautifulSoup(html, "lxml")
-
+    
     for data in soup(allow_listed_tag_attrs.keys()):
-        # If the tag is in the whitelist, filter its attributes
+        if data.name == 'table':
+            # No changes necessary
+            # log.debug(f'Table on dataset %s' % pkg_dict.get('name'))
+            pass
         if data.name == 'iframe':
-            print(f'Replacing iframe data URLs %s' % pkg_dict.get('name'))
+            log.debug(f'Replacing iframe %s' % pkg_dict.get('name'))
             # Replace iframe with a link
             iframe_src = data.get('src', '#')
-            replacement_tag= soup.new_tag("p")
-            replacement_tag.string = "This description contains embedded content "
+            replacement_tag= soup.new_tag("p", **{'class': 'dfl_replaced_content'})
+            replacement_tag.string = "Embedded content has been removed from this description ("
 
             # Create <a> tag with href attribute
             a_tag = soup.new_tag("a", href=iframe_src)
-            a_tag.string = "that can be viewed here"
+            a_tag.string = "view here"
             replacement_tag.append(a_tag)
-            replacement_tag.append('.')
+            replacement_tag.append(')')
 
             data.replace_with(replacement_tag)
-        elif data.name == 'img' and data.get('src','').startswith('data:'):
-            print(f'Replacing img data URLs %s' % pkg_dict.get('name'))
-            replacement_tag = soup.new_tag('p', **{'class': 'dfl_replaced_image'})
-            replacement_tag.append("[an embedded image cannot be displayed here - ")
+        elif data.name == 'img': 
+            log.debug(f'Replacing img with alt text (if any) %s' % pkg_dict.get('name'))
+            #print(data)
+            replacement_tag = soup.new_tag('p', **{'class': 'dfl_replaced_content'})
+            
+            if data.get('alt'):
+               replacement_tag.append(f'An image 〝')
+               em_tag = soup.new_tag('em', **{'class': 'replaced_image_description'})
+               em_tag.string = data.get('alt')
+    
+               replacement_tag.append(em_tag)
+               replacement_tag.append('〞 has been removed from this description (')
+    
+            else:                
+                replacement_tag.append("An image has been removed from this description (")
+            
+            for parent in data.find_parents('a'):
+                parent.unwrap()
+                
             a_tag = soup.new_tag('a', href=pkg_dict['upstream_url'])
-            a_tag.string = 'view on source site'
+            a_tag.string = 'view upstream'
             replacement_tag.append(a_tag)
-            replacement_tag.append(']')
+            replacement_tag.append(")")
+                
             data.replace_with(replacement_tag)
+            
         elif data.name in ['h1','h2','h3','h4','h5','h6','h7']:
-            print(f'Replacing heading with consistent one')
+            log.debug(f'Replacing heading with consistent one')
             text = ''.join(str(child) for child in data.children)
             text = bleach.clean(text, strip=True, strip_comments=True, tags=[])
             replacement_tag = soup.new_tag('h3')
@@ -217,7 +238,6 @@ def sanitise_markup_for_dataset_page(html: str, pkg_dict: dict[str, Any]) -> str
     if soup.body:
         contents = ''.join(str(child) for child in soup.body.children)
     else:
-        print(pkg_dict['id'])
         contents = ''
 
     return contents
