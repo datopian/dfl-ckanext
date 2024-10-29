@@ -60,7 +60,7 @@
         <p><strong>{{ pkg.search_description }}</strong></p>
     {% endif %}
 
-    {% if pkg.notes %}
+    {% if pkg.notes_with_markup %}
         <div class="notes embedded-content">
             {{ pkg.notes_with_markup|safe }}
         </div>
