@@ -32,9 +32,9 @@ from .login import ( login )
 
 from flask import has_request_context
 
-TABLE_FORMATS = toolkit.config.get("ckan.harvesters.table_formats").split(" ")
-REPORT_FORMATS = toolkit.config.get("ckan.harvesters.report_formats").split(" ")
-GEOSPATIAL_FORMATS = toolkit.config.get("ckan.harvesters.geospatial_formats").split(" ")
+TABLE_FORMATS = toolkit.config.get("ckan.harvesters.table_formats","csv xls xlsx xlsm tsv spreadsheet tab google-sheet").split(" ")
+REPORT_FORMATS = toolkit.config.get("ckan.harvesters.report_formats","zip html htm pdf docx doc odw").split(" ")
+GEOSPATIAL_FORMATS = toolkit.config.get("ckan.harvesters.geospatial_formats","geojson shp mbtiles kml").split(" ")
 
 def load_config_as_list(key):
     val = toolkit.config.get(key,'')
@@ -376,10 +376,10 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
         timestamps.set_to_now(ctx, resources)
 
     def before_dataset_index(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
-        pkg_dict["notes_with_markup"] = helpers.sanitise_markup(
-            pkg_dict["notes"], remove_tags=False
+        pkg_dict["notes_with_markup"] = helpers.sanitise_markup_for_dataset_page(
+            pkg_dict["notes"], pkg_dict
         )
-        pkg_dict["notes"] = helpers.sanitise_markup(pkg_dict["notes"], remove_tags=True)
+        pkg_dict["notes"] = helpers.sanitise_markup_for_search_results(pkg_dict["notes"])
 
         validated_data_dict = json.loads(pkg_dict.get("validated_data_dict", {}))
         validated_data_dict["notes"] = pkg_dict["notes"]

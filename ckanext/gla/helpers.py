@@ -1,8 +1,10 @@
 import os
 import re
+import logging
 from typing import Any
 
 import bleach
+
 from bs4 import BeautifulSoup
 from markupsafe import Markup
 
@@ -21,6 +23,7 @@ from ckan.lib.helpers import render_markdown as original_render_markdown
 
 site_title = config.get("ckan.site_title", "Default Site Title")
 
+log = logging.getLogger(__name__)
 
 def __page_context(request):
     page_info = {"source": "", "is_search": False}
@@ -123,13 +126,125 @@ def get_site_title(request):
     else:
         return None
 
+allow_listed_tag_attrs = {
+        'h1':[],
+        'h2':[],
+        'h3':[],
+        'h4':[],
+        'h5':[],
+        'h6':[],
+        'h7':[],
+        'a': ['href'],
+        'strong': [],
+        'em': [],
+        'ul': [],
+        'li': [],
+        'ol': [],
+        'table': [],
+        'tr': [],
+        'th': [],
+        'td': [],
+        'thead': [],
+        'tbody': [],
+        'tfoot': [],
+        'caption': [],
+        'div':[], 
+        'img': ['alt','src'],
+        'iframe':['src'],
+        'p':['class'] # Temporarily allowed but post filter later for specific classes only e.g. dfl_trusted_email_access
+}
 
-def sanitise_markup(html: str, remove_tags: bool = True) -> str:
+ALLOWED_PROTOCOLS = ['http', 'https', 'mailto', 'data'] # NOTE we don't really allow 'data' we replace it later in post filtering
+
+def sanitise_markup_for_dataset_page(html: str, pkg_dict: dict[str, Any]) -> str:
+    """Sanitise and fix markup in HTML strings for rendering on the
+    dataset page.
+
+    NOTE: we need to allow a subset of markup through for rendering,
+    so we clean it and then post process the cleaned html as best we
+    can.
+
     """
-    Sanitise and fix markup in HTML strings.
 
-    :param remove_tags: If True then remove all html tags from the string and only return the text.
-    If False, keep all tags in bleach's ALLOWED_TAGS list and attributes in ALLOWED_ATTRIBUTES list.
+    if not html:
+        return ''
+
+    # Bleach sanitises HTML string by removing unsafe tags and attributes.
+    # It also removes mismatched tags.
+    # NOTE: CSS in style arrtibutes isn't sanitised but can be added through additional dependencies,
+    # see bleach.CSS_SANITIZER.
+
+    html = bleach.clean(html,strip=True, strip_comments=True, attributes=allow_listed_tag_attrs, tags=allow_listed_tag_attrs.keys(),
+                        protocols=ALLOWED_PROTOCOLS)
+
+    soup = BeautifulSoup(html, "lxml")
+    
+    for data in soup(allow_listed_tag_attrs.keys()):
+        if data.name == 'table':
+            # No changes necessary
+            # log.debug(f'Table on dataset %s' % pkg_dict.get('name'))
+            pass
+        if data.name == 'iframe':
+            log.debug(f'Replacing iframe %s' % pkg_dict.get('name'))
+            # Replace iframe with a link
+            iframe_src = data.get('src', '#')
+            replacement_tag= soup.new_tag("p", **{'class': 'dfl_replaced_content'})
+            replacement_tag.string = "Embedded content has been removed from this description ("
+
+            # Create <a> tag with href attribute
+            a_tag = soup.new_tag("a", href=iframe_src)
+            a_tag.string = "view here"
+            replacement_tag.append(a_tag)
+            replacement_tag.append(')')
+
+            data.replace_with(replacement_tag)
+        elif data.name == 'img': 
+            log.debug(f'Replacing img with alt text (if any) %s' % pkg_dict.get('name'))
+            #print(data)
+            replacement_tag = soup.new_tag('p', **{'class': 'dfl_replaced_content'})
+            
+            if data.get('alt'):
+               replacement_tag.append(f'An image 〝')
+               em_tag = soup.new_tag('em', **{'class': 'replaced_image_description'})
+               em_tag.string = data.get('alt')
+    
+               replacement_tag.append(em_tag)
+               replacement_tag.append('〞 has been removed from this description (')
+    
+            else:                
+                replacement_tag.append("An image has been removed from this description (")
+            
+            for parent in data.find_parents('a'):
+                parent.unwrap()
+                
+            a_tag = soup.new_tag('a', href=pkg_dict['upstream_url'])
+            a_tag.string = 'view upstream'
+            replacement_tag.append(a_tag)
+            replacement_tag.append(")")
+                
+            data.replace_with(replacement_tag)
+            
+        elif data.name in ['h1','h2','h3','h4','h5','h6','h7']:
+            log.debug(f'Replacing heading with consistent one')
+            text = ''.join(str(child) for child in data.children)
+            text = bleach.clean(text, strip=True, strip_comments=True, tags=[])
+            replacement_tag = soup.new_tag('h3')
+            replacement_tag.string = text
+
+            data.replace_with(replacement_tag)
+        else:
+            pass
+
+    if soup.body:
+        contents = ''.join(str(child) for child in soup.body.children)
+    else:
+        contents = ''
+
+    return contents
+
+def sanitise_markup_for_search_results(html: str) -> str:
+    """
+    Sanitise and fix markup in HTML strings for search result context
     """
     soup = BeautifulSoup(html, "lxml")
 
@@ -140,11 +255,9 @@ def sanitise_markup(html: str, remove_tags: bool = True) -> str:
     # It also removes mismatched tags.
     # NOTE: CSS in style arrtibutes isn't sanitised but can be added through additional dependencies,
     # see bleach.CSS_SANITIZER.
-    if remove_tags:
-        return bleach.clean(" ".join(soup.stripped_strings), strip=True)
+    return bleach.clean(" ".join(soup.stripped_strings), strip=True)
 
     return str(soup)
-
 
 def _sanitise_markup(html: str, remove_tags: bool = True) -> str:
     soup = BeautifulSoup(html, "lxml")
@@ -206,7 +319,7 @@ def orgs_list_for_user(user: str, permission: str = 'read') -> list[dict[str, An
     '''
     context: Context = {'user': user}
     data_dict = { 'permission': permission}
-    orgs = logic.get_action('organization_list_for_user')(context, data_dict)    
+    orgs = logic.get_action('organization_list_for_user')(context, data_dict)
     return orgs
 
 def is_sysadmin():
@@ -214,7 +327,7 @@ def is_sysadmin():
         return True
     else:
         return False
-    
+
 def get_helpers():
     return {
         "get_followed_datasets": followed,
