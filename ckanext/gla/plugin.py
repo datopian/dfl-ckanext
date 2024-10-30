@@ -123,6 +123,11 @@ def isodate_string(value, context):
     date = isodate(value,context) # this will raise an invalid exception for us
     return value
 
+def patch_missing_organisation(result):
+    if not result.get('organization'):
+        result['organization'] = {"name":"unknown", "title":"Unknown Organisation"}
+    if not result.get('organization').get("title"):
+        result['organization']['title'] = "Unknown Organisation"
 
 class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPermissionLabels):
     plugins.implements(plugins.IConfigurer)
@@ -311,6 +316,9 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
                 search_description = highlighted_search_description or result.get(
                     "search_description", ""
                 )
+
+                patch_missing_organisation(result) ## TEMPORARY HOTFIX workaround FOR ISSUE https://london.atlassian.net/browse/DAT-859
+                
                 organization = (
                     highlighted_organization_title or result["organization"]["title"]
                 )
