@@ -375,13 +375,14 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
         return search_results
 
     def after_dataset_create(self, ctx, package):
-        timestamps.override(ctx, package)
+        pass
 
     def after_dataset_update(self, ctx, package):
-        timestamps.override(ctx, package)
+        pass
 
     def after_resource_delete(self, ctx, resources):
-        timestamps.set_to_now(ctx, resources)
+        ## timestamps.set_to_now(ctx, resources)
+        pass
 
     def before_dataset_index(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
         pkg_dict["notes_with_markup"] = helpers.sanitise_markup_for_dataset_page(
