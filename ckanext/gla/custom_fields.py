@@ -40,6 +40,11 @@ custom_dataset_fields = {
         data_quality_validator,
         toolkit.get_converter("convert_to_extras"),
     ],
+    "data_last_modified": [
+        # Didn't put this in extras to make it easier to sort over in results etc
+        toolkit.get_validator("ignore_missing"),
+        toolkit.get_validator("isodate")
+    ],
     "dataset_boost": [float_validator, toolkit.get_converter("convert_to_extras")],
     "project_name": [
         toolkit.get_validator("ignore_missing"),
