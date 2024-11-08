@@ -385,6 +385,12 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
         pass
 
     def before_dataset_index(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
+        if pkg_dict['type'] != 'dataset':
+            # Harvest sources are also "datasets" so only trigger the
+            # below logic for real datasets.
+            return pkg_dict
+            
+        
         pkg_dict["notes_with_markup"] = helpers.sanitise_markup_for_dataset_page(
             pkg_dict["notes"], pkg_dict
         )
@@ -392,6 +398,11 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
 
         validated_data_dict = json.loads(pkg_dict.get("validated_data_dict", {}))
         validated_data_dict["notes"] = pkg_dict["notes"]
+
+        data_last_modified = timestamps.data_last_modified(pkg_dict)
+        pkg_dict['data_last_modified'] = data_last_modified
+        
+        validated_data_dict["data_last_modified"] = pkg_dict["data_last_modified"]        
         pkg_dict["validated_data_dict"] = json.dumps(validated_data_dict)
 
         new_format_list = []
