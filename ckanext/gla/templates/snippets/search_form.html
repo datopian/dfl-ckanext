@@ -1,7 +1,7 @@
 {% import 'macros/form.html' as form %}
 
 {% set placeholder = 'Please enter a search term e.g. environment' if type == 'dataset' else 'Search {type}s...'.format(type=type) %}
-{% set sorting = [(_('Relevance'), 'score desc'), (_('Last Modified'), 'metadata_modified desc'), (_('Name (A-Z)'), 'dfl_title_sort asc'), (_('Name (Z-A)'), 'dfl_title_sort desc')] %}
+{% set sorting = [(_('Relevance'), 'score desc'), (_('Last Modified'), 'data_last_modified desc'), (_('Name (A-Z)'), 'dfl_title_sort asc'), (_('Name (Z-A)'), 'dfl_title_sort desc')] %}
 {% set search_class = search_class if search_class else 'search-giant' %}
 {% set no_bottom_border = no_bottom_border if no_bottom_border else false %}
 {% set form_id = form_id if form_id else false %}

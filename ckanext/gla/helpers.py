@@ -81,7 +81,7 @@ def remove_favourites(user, request, all_items):
 
 
 def last_updated(package):
-    return package.get("metadata_modified", "")
+    return package.get("data_last_modified", "")
 
 
 def extract_resource_format(resource):

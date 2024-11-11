@@ -20,11 +20,11 @@
 {% endblock %}
 
 {% block package_notes %}
-    {% set created=h.render_datetime(pkg.metadata_created) %}
-    {% set updated=h.render_datetime(pkg.metadata_modified) %}
+    {% set created=h.render_datetime(h.get_pkg_dict_extra(pkg_dict=pkg_dict, key='upstream_metadata_created')) %}
+    {% set updated=h.render_datetime(pkg.data_last_modified) %}
     {% set entry_type=pkg.entry_type.capitalize() if pkg.entry_type else "Dataset" %}
-    <p class="gla-informational">
-        {{ entry_type }} created {{ created }}{% if updated != created %}, updated {{ updated }}{% endif %}
+<p class="gla-informational">
+        {{ entry_type }} created {{ created }}{% if updated and updated != created %}, updated {{ updated }}{% endif %}
         by
         <a href={% url_for 'dataset_search', organization=pkg.organization.name %}>{{ pkg.organization.title }}</a>
     </p>

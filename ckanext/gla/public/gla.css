@@ -1803,6 +1803,10 @@ p.filter {
     color: #767676;
 }
 
+p.more-details-description {
+    margin-top: 16px;
+}
+
 .gla-details__summary {
     color: var(--t-colors-pink);
 }
