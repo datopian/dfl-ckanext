@@ -19,7 +19,7 @@ def set_to_now(ctx, _resources):
 
 # Priority ordering of possible fields upstream datapress sources use to indicate
 # when a dataset was last modified.
-RESOURCE_LAST_MODIFIED_FIELDS = ['last_modified', 'check_timestamp', 'created', 'createdAt']
+RESOURCE_LAST_MODIFIED_FIELDS = ['last_modified', 'check_timestamp', 'upstream_created_at', 'createdAt']
     
 def data_last_modified(package):
     p = tk.get_action("package_show")(None, {"id": package["id"]})
@@ -32,7 +32,7 @@ def data_last_modified(package):
             
     # For each of the dataset's resources, get the "last_modified" timestamp
     # or the "created" timestamp if that doesn't exist
-    resource_modified_dates = [resource_date(r) for r in p["resources"]]
+    resource_modified_dates = [resource_date(r) for r in p["resources"] if resource_date(r) is not None]
 
     # If there were no resources, return None 
     if not resource_modified_dates:        

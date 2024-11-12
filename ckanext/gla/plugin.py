@@ -458,6 +458,10 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
     def _modify_package_schema(self, schema: Schema):
         # Add our custom_resource_text metadata field to the schema
         cast(Schema, schema['resources']).update({
+            "upstream_created_at": [
+                toolkit.get_validator("ignore_missing"),
+                toolkit.get_validator("isodate_string")
+            ],
             'temporal_coverage_from' : [ toolkit.get_validator('ignore_missing'),
                                          toolkit.get_validator('isodate_string')],
             'temporal_coverage_to' : [ toolkit.get_validator('ignore_missing'),
@@ -471,14 +475,12 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
         schema = super(GlaPlugin, self).create_package_schema()
         schema.update(custom_fields.custom_dataset_fields)
         schema = self._modify_package_schema(schema)
-        #breakpoint()
         return schema
 
     def update_package_schema(self) -> Schema:
         schema = super(GlaPlugin, self).update_package_schema()
         schema.update(custom_fields.custom_dataset_fields)
         schema = self._modify_package_schema(schema)
-        #breakpoint()
         return schema
 
     def show_package_schema(self) -> Schema:
@@ -508,12 +510,7 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
             }
         )
 
-        cast(Schema, schema['resources']).update({
-            'temporal_coverage_from' : [ toolkit.get_validator('ignore_missing'),
-                                         toolkit.get_validator('isodate_string')],
-            'temporal_coverage_to' : [ toolkit.get_validator('ignore_missing'),
-                                       toolkit.get_validator('isodate_string')]
-        })
+        schema = self._modify_package_schema(schema)
         
         return schema
 
