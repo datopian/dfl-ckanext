@@ -29,6 +29,13 @@
     {% if extra.key == "upstream_metadata_created" %}
         {% set extras.upstream_metadata_created=extra.value %}
     {% endif %}
+    {% if extra.key == "upstream_last_revised" %}
+        {% set extras.upstream_last_revised=extra.value %}
+    {% endif %}
+    {% if extra.key == "upstream_next_update" %}
+        {% set extras.upstream_next_update=extra.value %}
+    {% endif %}
+
 {% endfor %}
 
 <section id="additional-info">
@@ -40,6 +47,9 @@ table_rows=[{"label": _('Source') , "text": pkg_dict.url, "href": pkg_dict.url},
             {"label": _('State'), "text": pkg_state},
             {"label": _('Data last updated'), "datetime": h.last_updated(pkg_dict)},
             {"label": _('Created (upstream)'), "datetime": extras.upstream_metadata_created },
+            {"label": _('Next update expected (upstream)'), "datetime": extras.upstream_next_update},
+            {"label": _('Last revised (upstream)'), "datetime": extras.upstream_last_revised },
+            {"label": _('Data Quality'), "text": pkg_dict.data_quality},
             {"label": _('Upstream URL'), "text": extras.upstream_url, "href": extras.upstream_url},
             {"label": _('Data Quality'), "text": pkg_dict.data_quality}
   ]
