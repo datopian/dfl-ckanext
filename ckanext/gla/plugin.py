@@ -130,6 +130,17 @@ def patch_missing_organisation(result):
     if not result.get('organization').get("title"):
         result['organization']['title'] = "Unknown Organisation"
 
+def update_with_file_size(package_dict):
+    if package_dict.get("num_resources", 0) > 0:
+        total_file_size = sum(
+            item["size"]
+            for item in package_dict.get("resources", [])
+            if item and item["size"] is not None
+        )
+
+        if total_file_size > 0:
+            package_dict["total_file_size"] = total_file_size
+
 class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPermissionLabels):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IConfigDeclaration)
@@ -222,6 +233,7 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
     def before_dataset_view(self, package_dict):
         gla_information = []
 
+        update_with_file_size(package_dict)
         if package_dict.get("num_resources", 0) > 0:
             num_resources = package_dict.get("num_resources", 0)
             files_suffix = ungettext("file", "files", package_dict["num_resources"])
@@ -239,17 +251,8 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
 
             gla_information.append(resource_summary)
 
-            total_file_size = sum(
-                item["size"]
-                for item in package_dict.get("resources", [])
-                if item and item["size"] is not None
-            )
-
-            package_dict["total_file_size"] = total_file_size
-
-            gla_information.append(helpers.humanise_file_size(total_file_size))
-        else:
-            package_dict["total_file_size"] = 0
+            if package_dict.get('total_file_size',0) > 0:
+                gla_information.append(helpers.humanise_file_size(package_dict['total_file_size']))
 
         for extra in package_dict.get("extras", []):
             if extra["key"] == "update_frequency":
@@ -276,6 +279,10 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
             if resource.get('temporal_coverage_to'):
                 resource['temporal_coverage_to'] = convert_iso_to_ddmmyyyy(resource.get('temporal_coverage_to'))
         
+        return package_dict
+
+    def after_dataset_show(self, context, package_dict):
+        update_with_file_size(package_dict)
         return package_dict
 
     def after_dataset_search(
@@ -322,7 +329,7 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
                     "search_description", ""
                 )
 
-                patch_missing_organisation(result) ## TEMPORARY HOTFIX workaround FOR ISSUE https://london.atlassian.net/browse/DAT-859
+                patch_missing_organisation(result) ## Workaround for issue https://london.atlassian.net/browse/DAT-859
                 
                 organization = (
                     highlighted_organization_title or result["organization"]["title"]

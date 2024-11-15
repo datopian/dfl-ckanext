@@ -60,6 +60,10 @@ custom_dataset_fields = {
     "search_description": [
         toolkit.get_validator("ignore_missing"),
         toolkit.get_converter("convert_to_extras")],
+    "total_file_size": [
+        toolkit.get_validator("ignore_missing"),
+        toolkit.get_validator("natural_number_validator")
+    ],
 }
 
 
