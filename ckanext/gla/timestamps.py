@@ -17,59 +17,28 @@ def set_to_now(ctx, _resources):
     )
 
 
-def override(ctx, package):
-    """
-    CKAN's dataset create/update method sets the metadata_created and
-    metadata_modified fields to the current time, with no option to override
-    them. We want to inherit the upstream fields when they exist, or set the
-    dataset's last modified time to match the most recently updated resource.
+# Priority ordering of possible fields upstream datapress sources use to indicate
+# when a dataset was last modified.
+RESOURCE_LAST_MODIFIED_FIELDS = ['last_modified', 'check_timestamp', 'upstream_created_at', 'createdAt']
+    
+def data_last_modified(package):
+    p = tk.get_action("package_show")(None, {"id": package["id"]})
 
-    Uses the SQLAlchemy interface directly to update the metadata fields.
-    """
-    metadata_created = None
-    metadata_modified = None
+    def resource_date(resource):
+        for mod_field in RESOURCE_LAST_MODIFIED_FIELDS:
+            if resource.get(mod_field):
+                return resource.get(mod_field)
 
-    for extra in package["extras"]:
-        if extra["key"] == "upstream_metadata_created":
-            metadata_created = dateutil.parser.parse(extra["value"])
-        if extra["key"] == "upstream_metadata_modified":
-            metadata_modified = dateutil.parser.parse(extra["value"])
+            
+    # For each of the dataset's resources, get the "last_modified" timestamp
+    # or the "created" timestamp if that doesn't exist
+    resource_modified_dates = [resource_date(r) for r in p["resources"] if resource_date(r) is not None]
 
-    # If there's no upstream fields then this isn't a harvested dataset,
-    # so set the last modified date based on the dataset's resources
-    if metadata_created is None or metadata_modified is None:
-        p = tk.get_action("package_show")(None, {"id": package["id"]})
+    # If there were no resources, return None 
+    if not resource_modified_dates:        
+        return None
 
-        def resource_date(resource):
-            return resource.get("last_modified") or resource.get("created")
-
-        # For each of the dataset's resources, get the "last_modified" timestamp
-        # or the "created" timestamp if that doesn't exist
-        resource_modified_dates = [resource_date(r) for r in p["resources"]]
-
-        # If there were no resources, use the package's original last_updated time
-        if not resource_modified_dates:
-            resource_modified_dates = [p["metadata_modified"]]
-
-        # Sort the timestamps in descending order and get the first one
-        most_recent = sorted(resource_modified_dates, reverse=True)[0]
-        most_recent_datetime = dateutil.parser.parse(most_recent)
-        updated_timestamps = {
-            "metadata_modified": most_recent_datetime.replace(tzinfo=None)
-        }
-    else:
-        updated_timestamps = {
-            # CKAN assumes tzinfo is None (so that printed timestamps don't have
-            # timezone specifiers on them) so strip timezone information.
-            "metadata_created": metadata_created.replace(tzinfo=None),
-            "metadata_modified": metadata_modified.replace(tzinfo=None),
-        }
-
-    model = ctx["model"]
-
-    # Use SQLAlchemy directly to avoid re-triggering after_package_update:
-    (
-        model.Session.query(model.Package)
-        .filter_by(id=package["id"])
-        .update(updated_timestamps)
-    )
+    # Sort the timestamps in descending order and get the first one
+    most_recent = sorted(resource_modified_dates, reverse=True)[0]
+    most_recent_datetime = dateutil.parser.parse(most_recent)
+    return most_recent_datetime.replace(tzinfo=None).isoformat()

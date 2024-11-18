@@ -26,21 +26,42 @@
     {% if extra.key == "upstream_url" %}
         {% set extras.upstream_url=extra.value %}
     {% endif %}
+    {% if extra.key == "upstream_metadata_created" %}
+        {% set extras.upstream_metadata_created=extra.value %}
+    {% endif %}
+    {% if extra.key == "upstream_last_revised" %}
+        {% set extras.upstream_last_revised=extra.value %}
+    {% endif %}
+    {% if extra.key == "upstream_next_update" %}
+        {% set extras.upstream_next_update=extra.value %}
+    {% endif %}
+
 {% endfor %}
 
 <section id="additional-info">
 {% snippet "package/snippets/additional_info_table.html",
-table_rows=[{"label":  _('Source') , "text": pkg_dict.url, "href": pkg_dict.url},
+table_rows=[{"label": _('Source') , "text": pkg_dict.url, "href": pkg_dict.url},
             {"label": _('Author'), "text": author_text, "href": author_mailto},
             {"label": _('Maintainer'), "text": maintainer_text, "href": maintainer_mailto},
             {"label": _('Version'), "text": pkg_dict.version},
             {"label": _('State'), "text": pkg_state},
-            {"label": _('Last Updated'), "datetime": pkg_dict.metadata_modified},
-            {"label": _('Created'), "datetime": pkg_dict.metadata_created},
+            {"label": _('Data last updated'), "datetime": h.last_updated(pkg_dict)},
+            {"label": _('Created'), "datetime": extras.upstream_metadata_created },
+            {"label": _('Next update expected (upstream)'), "datetime": extras.upstream_next_update},
+            {"label": _('Last revised (upstream)'), "datetime": extras.upstream_last_revised },
+            {"label": _('Data Quality'), "text": pkg_dict.data_quality},
             {"label": _('Upstream URL'), "text": extras.upstream_url, "href": extras.upstream_url},
-            {"label": 'Data Quality', "text": pkg_dict.data_quality}]
-%}
+            {"label": _('Data Quality'), "text": pkg_dict.data_quality}
+  ]
+  %}
 </section>
 
-
-
+<details>
+  <summary class="gla-details__summary">More details</summary>
+  <div>
+    <p class="more-details-description">The following fields describe when data was recorded in this catalogue:</p>
+  {% snippet "package/snippets/additional_info_table.html",
+    table_rows=[{"label": _('First catalogued'), "datetime": pkg_dict.metadata_created },
+  {"label": _('Record last updated'), "datetime": pkg_dict.metadata_modified}]%}
+  </div>
+</details>

@@ -1,4 +1,5 @@
 import datetime
+import dateutil 
 import json
 import logging
 import re
@@ -129,6 +130,17 @@ def patch_missing_organisation(result):
     if not result.get('organization').get("title"):
         result['organization']['title'] = "Unknown Organisation"
 
+def update_with_file_size(package_dict):
+    if package_dict.get("num_resources", 0) > 0:
+        total_file_size = sum(
+            item["size"]
+            for item in package_dict.get("resources", [])
+            if item and item["size"] is not None
+        )
+
+        if total_file_size > 0:
+            package_dict["total_file_size"] = total_file_size
+
 class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPermissionLabels):
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IConfigDeclaration)
@@ -221,6 +233,7 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
     def before_dataset_view(self, package_dict):
         gla_information = []
 
+        update_with_file_size(package_dict)
         if package_dict.get("num_resources", 0) > 0:
             num_resources = package_dict.get("num_resources", 0)
             files_suffix = ungettext("file", "files", package_dict["num_resources"])
@@ -238,17 +251,8 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
 
             gla_information.append(resource_summary)
 
-            total_file_size = sum(
-                item["size"]
-                for item in package_dict.get("resources", [])
-                if item and item["size"] is not None
-            )
-
-            package_dict["total_file_size"] = total_file_size
-
-            gla_information.append(helpers.humanise_file_size(total_file_size))
-        else:
-            package_dict["total_file_size"] = 0
+            if package_dict.get('total_file_size',0) > 0:
+                gla_information.append(helpers.humanise_file_size(package_dict['total_file_size']))
 
         for extra in package_dict.get("extras", []):
             if extra["key"] == "update_frequency":
@@ -266,11 +270,19 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
                 return None
 
         for resource in package_dict.get("resources",[]):
+            if resource.get('upstream_created_at'):
+                # CKAN views expect this field as a datetime object
+                created_at = resource.get('upstream_created_at')
+                resource['upstream_created_at'] = dateutil.parser.isoparse(created_at)
             if resource.get('temporal_coverage_from'):
                 resource['temporal_coverage_from'] = convert_iso_to_ddmmyyyy(resource.get('temporal_coverage_from'))
             if resource.get('temporal_coverage_to'):
                 resource['temporal_coverage_to'] = convert_iso_to_ddmmyyyy(resource.get('temporal_coverage_to'))
         
+        return package_dict
+
+    def after_dataset_show(self, context, package_dict):
+        update_with_file_size(package_dict)
         return package_dict
 
     def after_dataset_search(
@@ -317,7 +329,7 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
                     "search_description", ""
                 )
 
-                patch_missing_organisation(result) ## TEMPORARY HOTFIX workaround FOR ISSUE https://london.atlassian.net/browse/DAT-859
+                patch_missing_organisation(result) ## Workaround for issue https://london.atlassian.net/browse/DAT-859
                 
                 organization = (
                     highlighted_organization_title or result["organization"]["title"]
@@ -375,15 +387,22 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
         return search_results
 
     def after_dataset_create(self, ctx, package):
-        timestamps.override(ctx, package)
+        pass
 
     def after_dataset_update(self, ctx, package):
-        timestamps.override(ctx, package)
+        pass
 
     def after_resource_delete(self, ctx, resources):
-        timestamps.set_to_now(ctx, resources)
+        ## timestamps.set_to_now(ctx, resources)
+        pass
 
     def before_dataset_index(self, pkg_dict: dict[str, Any]) -> dict[str, Any]:
+        if pkg_dict['type'] != 'dataset':
+            # Harvest sources are also "datasets" so only trigger the
+            # below logic for real datasets.
+            return pkg_dict
+            
+        
         pkg_dict["notes_with_markup"] = helpers.sanitise_markup_for_dataset_page(
             pkg_dict["notes"], pkg_dict
         )
@@ -391,6 +410,11 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
 
         validated_data_dict = json.loads(pkg_dict.get("validated_data_dict", {}))
         validated_data_dict["notes"] = pkg_dict["notes"]
+
+        data_last_modified = timestamps.data_last_modified(pkg_dict)
+        pkg_dict['data_last_modified'] = data_last_modified
+        
+        validated_data_dict["data_last_modified"] = pkg_dict["data_last_modified"]        
         pkg_dict["validated_data_dict"] = json.dumps(validated_data_dict)
 
         new_format_list = []
@@ -446,6 +470,10 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
     def _modify_package_schema(self, schema: Schema):
         # Add our custom_resource_text metadata field to the schema
         cast(Schema, schema['resources']).update({
+            "upstream_created_at": [
+                toolkit.get_validator("ignore_missing"),
+                toolkit.get_validator("isodate_string")
+            ],
             'temporal_coverage_from' : [ toolkit.get_validator('ignore_missing'),
                                          toolkit.get_validator('isodate_string')],
             'temporal_coverage_to' : [ toolkit.get_validator('ignore_missing'),
@@ -459,14 +487,12 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
         schema = super(GlaPlugin, self).create_package_schema()
         schema.update(custom_fields.custom_dataset_fields)
         schema = self._modify_package_schema(schema)
-        #breakpoint()
         return schema
 
     def update_package_schema(self) -> Schema:
         schema = super(GlaPlugin, self).update_package_schema()
         schema.update(custom_fields.custom_dataset_fields)
         schema = self._modify_package_schema(schema)
-        #breakpoint()
         return schema
 
     def show_package_schema(self) -> Schema:
@@ -496,12 +522,7 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
             }
         )
 
-        cast(Schema, schema['resources']).update({
-            'temporal_coverage_from' : [ toolkit.get_validator('ignore_missing'),
-                                         toolkit.get_validator('isodate_string')],
-            'temporal_coverage_to' : [ toolkit.get_validator('ignore_missing'),
-                                       toolkit.get_validator('isodate_string')]
-        })
+        schema = self._modify_package_schema(schema)
         
         return schema
 
