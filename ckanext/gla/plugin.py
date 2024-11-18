@@ -1,4 +1,5 @@
 import datetime
+import dateutil 
 import json
 import logging
 import re
@@ -266,6 +267,10 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
                 return None
 
         for resource in package_dict.get("resources",[]):
+            if resource.get('upstream_created_at'):
+                # CKAN views expect this field as a datetime object
+                created_at = resource.get('upstream_created_at')
+                resource['upstream_created_at'] = dateutil.parser.isoparse(created_at)
             if resource.get('temporal_coverage_from'):
                 resource['temporal_coverage_from'] = convert_iso_to_ddmmyyyy(resource.get('temporal_coverage_from'))
             if resource.get('temporal_coverage_to'):
