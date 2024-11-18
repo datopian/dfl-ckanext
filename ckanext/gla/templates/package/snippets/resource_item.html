@@ -11,35 +11,29 @@
         <details>
             <summary class="gla-details__summary">More details</summary>
             <div class="gla-details__content">
-                {% set data_modified=res.created %}
-                {% if res.last_modified %}
-                    {% set data_modified=res.last_modified %}
-                {% endif %}
-
-                {% set metadata_modified=res.created %}
-                {% if res.metadata_modified %}
-                    {% set metadata_modified=res.metadata_modified %}
-                {% endif %}
-
                 {% set format= res.format or res.mimetype_inner or res.mimetype %}
 
                 <dl class="govuk-summary-list"></dl>
+                {% if res.last_modified %}
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">
-                        Data last updated
+                      Modified
                     </dt>
                     <dd class="govuk-summary-list__value">
-                        {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=data_modified %}
+                        {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=res.last_modified %}
                     </dd>
                 </div>
+                {% endif %}
+                {% if res.upstream_created_at %}
                 <div class="govuk-summary-list__row">
                     <dt class="govuk-summary-list__key">
-                        Created
+                      Created
                     </dt>
                     <dd class="govuk-summary-list__value">
-                        {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=res.created %}
+                      {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=res.upstream_created_at %}
                     </dd>
                 </div>
+                {% endif %}
                 <div class="govuk-summary-list__row govuk-summary-list__row--no-border">
                     <dt class="govuk-summary-list__key">
                         Licence
