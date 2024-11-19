@@ -39,6 +39,7 @@
     --t-colors-vulcan: #111827;
     --t-colors-dark-grey: #1a1e21;
     --t-colors-light-dark-grey: #1f2427;
+    --t-colors-dark-grey-accessibile: #333333;
     --t-colors-text-grey: #333;
     --t-colors-light-grey: #ececed;
     --t-colors-off-white: #efefef;
@@ -804,13 +805,21 @@ a .fa {
     margin-bottom: 4rem;
 }
 
+.page-header, .nav-tabs {
+    border-bottom: 1px solid  var(--t-colors-dark-grey-accessibile);
+}
+
 .page-header .content_action {
     margin-top: -10px;
 }
 
+.nav-tabs .nav-link:hover, .page-header .nav-tabs li a:hover, .nav-tabs .nav-link:focus, .page-header .nav-tabs li a:focus {
+    border-color: var(--t-colors-dark-grey-accessibile);
+}
+
 .page-header .nav-tabs li.active a,
 .page-header .nav-tabs a:hover {
-    border-color: var(--t-colors-grey-50);
+    border-color: var(--t-colors-dark-grey-accessibile);
     border-bottom-color: transparent;
 }
 
