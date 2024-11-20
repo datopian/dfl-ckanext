@@ -1,5 +1,5 @@
 <tr class="govuk-table__row">
-  <td class="govuk-table__cell">
+  <th scope="row" class="govuk-table__cell">
         <h3>{{ h.resource_display_name(res) | truncate(50) }}</h3>
 
         {% if res.description %}
@@ -49,7 +49,7 @@
                 </dl>
             </div>
         </details>
-    </td>
+    </th>
 
     <td class="govuk-table__cell">
         {% if res.format %}
