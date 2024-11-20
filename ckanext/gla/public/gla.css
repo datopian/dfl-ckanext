@@ -1828,6 +1828,20 @@ p.more-details-description {
     margin: 10px;
 }
 
+td.govuk-table__cell h3 {
+    font-size: 1rem;
+    line-height: 1.25;
+}
+
+@media(min-width: 40.0625em) {
+    td.govuk-table__cell h3 {
+
+    font-size: 1.1875rem;
+    line-height: 1.3157894737;
+
+    }
+}
+
 .govuk-table {
     font-weight: 400;
     font-size: 1rem;

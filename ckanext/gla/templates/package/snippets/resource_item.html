@@ -1,6 +1,6 @@
 <tr class="govuk-table__row">
-  <td scope="row" class="govuk-table__cell">
-        <p><strong>{{ h.resource_display_name(res) | truncate(50) }}</strong></p>
+  <td class="govuk-table__cell">
+        <h3>{{ h.resource_display_name(res) | truncate(50) }}</h3>
 
         {% if res.description %}
             <p>
