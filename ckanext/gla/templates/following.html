@@ -1,5 +1,10 @@
 {% extends "user/dashboard.html" %}
 
+{% block subtitle %}
+Followed Datasets {{ g.template_title_delimiter }} {{ user.display_name }} {{ g.template_title_delimiter }} {{ _('Users') }}{{ g.site_title }}
+{% endblock %}
+
+
 {% block primary_content_inner %}
 
 <div data-module="dashboard">
