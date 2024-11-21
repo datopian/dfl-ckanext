@@ -4,7 +4,7 @@
 
 {% block content_primary_nav %}
   {% if h.is_sysadmin() %}
-    {{ h.build_nav_icon('user.read', _('Organisations'), id=user.name, icon='building') }}
+    {{ h.build_nav_icon('users_blueprint.view_user', _('Organisations'), id=user.name, icon='building') }}
   {% endif %}
 
   {% if h.check_access('api_token_list', {'user': user['name']}) %}
