@@ -1,5 +1,8 @@
 {% ckan_extends %}
 
+{% block subtitle %}{{ user.display_name }} {{ g.template_title_delimiter }} {{ _('Users') }}{% endblock %}
+
+
 {% block breadcrumb_content %}
 <li><a href="{{ h.url_for('activity.dashboard') }}">{{ _('Dashboard') }}</a></li>
 <li class="active">

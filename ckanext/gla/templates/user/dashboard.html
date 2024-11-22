@@ -1,5 +1,10 @@
 {% ckan_extends %}
 
+{% block subtitle %}
+Activity {{ g.template_title_delimiter }} {{ user.display_name }} {{ g.template_title_delimiter }} {{ g.site_title }}
+{% endblock %}
+
+
 {% block breadcrumb_content %}
 <li class="active"><a href="{{ h.url_for('activity.dashboard') }}">{{ _('Dashboard') }}</a></li>
 {% endblock %}

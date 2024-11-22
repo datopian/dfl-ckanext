@@ -1,6 +1,6 @@
 <tr class="govuk-table__row">
-  <td scope="row" class="govuk-table__cell">
-        <p><strong>{{ h.resource_display_name(res) | truncate(50) }}</strong></p>
+  <th scope="row" class="govuk-table__cell">
+        <h3>{{ h.resource_display_name(res) | truncate(50) }}</h3>
 
         {% if res.description %}
             <p>
@@ -34,7 +34,7 @@
                     </dd>
                 </div>
                 {% endif %}
-                <div class="govuk-summary-list__row govuk-summary-list__row--no-border">
+                <dl class="govuk-summary-list__row govuk-summary-list__row--no-border">
                     <dt class="govuk-summary-list__key">
                         Licence
                     </dt>
@@ -45,11 +45,11 @@
                           Unknown Licence
                         {% endif %}
                     </dd>
-                </div>
+                </dl>
                 </dl>
             </div>
         </details>
-    </td>
+    </th>
 
     <td class="govuk-table__cell">
         {% if res.format %}
