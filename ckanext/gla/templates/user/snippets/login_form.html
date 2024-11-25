@@ -3,13 +3,19 @@
 {% set username_error = true if error_summary %}
 {% set password_error = true if error_summary %}
 
+{% block form %}
 <form action="{{ action }}" method="post">
     {{ h.csrf_input() }}
     {{ form.errors(errors=error_summary) }}
 
-    {{ form.input('login', label=_("Username or Email"), id='field-login', value="", error=username_error, classes=["control-medium"], attrs={'class': 'form-control', 'autocomplete': 'username', 'required': 'true'}) }}
+    {% block core_fields %}
+      {% block required_core_fields %}
 
-    {{ form.input('password', label=_("Password"), id='field-password', type="password", value="", error=password_error, classes=["control-medium"], attrs={'class': 'form-control', 'autocomplete': 'current-password', 'required': 'true'}) }}
+        {{ form.input('login', label=_("Username or Email"), id='field-login', value="", error=username_error, classes=["control-medium"], attrs={'class': 'form-control', 'autocomplete': 'username', 'required': 'true'}, is_required=True) }}
+
+        {{ form.input('password', label=_("Password"), id='field-password', type="password", value="", error=password_error, classes=["control-medium"], attrs={'class': 'form-control', 'autocomplete': 'current-password', 'required': 'true'}, is_required=True) }}
+      {% endblock %}
+    {% endblock %}
 
     <div class="form-actions">
         {% block login_button %}
@@ -17,3 +23,4 @@
         {% endblock %}
     </div>
 </form>
+{% endblock %}
