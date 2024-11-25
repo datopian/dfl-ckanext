@@ -7,9 +7,9 @@
     {{ h.csrf_input() }}
     {{ form.errors(errors=error_summary) }}
 
-    {{ form.input('login', label=_("Username or Email"), id='field-login', value="", error=username_error, classes=["control-medium"], attrs={'class': 'form-control', 'autocomplete': 'username'}) }}
+    {{ form.input('login', label=_("Username or Email"), id='field-login', value="", error=username_error, classes=["control-medium"], attrs={'class': 'form-control', 'autocomplete': 'username', 'required': 'true'}) }}
 
-    {{ form.input('password', label=_("Password"), id='field-password', type="password", value="", error=password_error, classes=["control-medium"], attrs={'class': 'form-control', 'autocomplete': 'current-password'}) }}
+    {{ form.input('password', label=_("Password"), id='field-password', type="password", value="", error=password_error, classes=["control-medium"], attrs={'class': 'form-control', 'autocomplete': 'current-password', 'required': 'true'}) }}
 
     <div class="form-actions">
         {% block login_button %}
