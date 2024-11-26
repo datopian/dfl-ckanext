@@ -23,19 +23,12 @@ through `ckan.ini` and `custom_options.ini` you can customise the following opti
 
 ## Requirements
 
-**TODO:** For example, you might want to mention here which versions of CKAN this
-extension works with.
-
-If your extension works across different versions you can add the following table:
-
 Compatibility with core CKAN versions:
 
 | CKAN version    | Compatible?   |
 | --------------- | ------------- |
-| 2.6 and earlier | not tested    |
-| 2.7             | not tested    |
-| 2.8             | not tested    |
-| 2.9             | not tested    |
+| 2.9 and earlier | not tested    |
+| 2.10.1          | yes           |
 
 Suggested values:
 
