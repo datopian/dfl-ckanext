@@ -18,6 +18,10 @@
     {% endblock %}
 
     <div class="form-actions">
+      <span aria-hidden="true" class="control-required-message">
+        <span class="control-required">*</span> Required field
+      </span>
+
         {% block login_button %}
         <button class="btn btn-primary" type="submit">{{ _('Submit') }}</button>
         {% endblock %}
