@@ -69,6 +69,7 @@ def filtered_facets(all_facets):
     return non_zero_or_selected_facets
 
 
+@toolkit.side_effect_free
 def package_search(context: Context, data_dict: DataDict) -> ActionResult.PackageSearch:
     """
     This is a copy of the original package_search function from ckan.logic.action.get
