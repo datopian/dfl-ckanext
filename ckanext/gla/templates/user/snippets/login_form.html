@@ -17,6 +17,12 @@
       {% endblock %}
     {% endblock %}
 
+    {% block captcha %}
+      {% if g.recaptcha_publickey %}
+        {% snippet "user/snippets/recaptcha.html", public_key=g.recaptcha_publickey %}
+      {% endif %}
+    {% endblock %}
+
     <div class="form-actions">
       <span aria-hidden="true" class="control-required-message">
         <span class="control-required">*</span> Required field

@@ -16,6 +16,7 @@ from ckan.common import (
 )
 import ckan.plugins.toolkit as tk
 import ckan.model as model
+import ckan.lib.captcha as captcha
 
 from ckan.lib.helpers import helper_functions as h
 from ckan.types import Response
@@ -38,6 +39,13 @@ def login() -> Union[Response, str]:
         return base.render("user/logout_first.html", extra_vars)
 
     if request.method == "POST":
+        try:
+            captcha.check_recaptcha(request)
+        except captcha.CaptchaError:
+            error_msg = _(u'Bad Captcha. Please try again.')
+            h.flash_error(error_msg)
+            return base.render("user/login.html", extra_vars)
+
         username_or_email = request.form.get("login")
         password = request.form.get("password")
         _remember = request.form.get("remember")
