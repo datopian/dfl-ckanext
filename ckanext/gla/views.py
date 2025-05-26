@@ -96,45 +96,45 @@ from . import user
 
 # Copied from:
 # https://github.com/ckan/ckan/blob/3c676e3cf1f075c5e9bae3b625b86247edf3cc1d/ckan/views/user.py#L124
-#def view_user(id):
-#    match id:
-#        case "me":
-#            return ckan.views.user.me()
-#        case "edit":
-#            return ckan.views.user._edit_view()
-#        case "register":
-#            return ckan.views.user.RegisterView.as_view("register")()
-#        case "login":
-#            return ckan.views.user.login()
-#        case "_logout":
-#            return ckan.views.user.logout()
-#        case "logged_out_redirect":
-#            return ckan.views.user.logged_out_page()
-#        case "reset":
-#            return ckan.views.user.RequestResetView.as_view("request_reset")()
-#
-#    context = cast(
-#        Context,
-#        {
-#            "model": model,
-#            "session": model.Session,
-#            "user": current_user.name,
-#            "auth_user_obj": current_user,
-#            "for_view": True,
-#        },
-#    )
-#    data_dict: dict[str, Any] = {
-#        "id": id,
-#        "user_obj": current_user,
-#        "include_datasets": True,
-#        "include_num_followers": True,
-#    }
-#    # FIXME: line 331 in multilingual plugins expects facets to be defined.
-#    # any ideas?
-#    g.fields = []
-#
-#    extra_vars = _extra_template_variables(context, data_dict)
-#    return base.render("user/read.html", extra_vars)
+def view_user(id):
+    match id:
+        case "me":
+            return ckan.views.user.me()
+        case "edit":
+            return ckan.views.user._edit_view()
+        case "register":
+            return ckan.views.user.RegisterView.as_view("register")()
+        case "login":
+            return ckan.views.user.login()
+        case "_logout":
+            return ckan.views.user.logout()
+        case "logged_out_redirect":
+            return ckan.views.user.logged_out_page()
+        case "reset":
+            return ckan.views.user.RequestResetView.as_view("request_reset")()
+
+    context = cast(
+        Context,
+        {
+            "model": model,
+            "session": model.Session,
+            "user": current_user.name,
+            "auth_user_obj": current_user,
+            "for_view": True,
+        },
+    )
+    data_dict: dict[str, Any] = {
+        "id": id,
+        "user_obj": current_user,
+        "include_datasets": True,
+        "include_num_followers": True,
+    }
+    # FIXME: line 331 in multilingual plugins expects facets to be defined.
+    # any ideas?
+    g.fields = []
+
+    extra_vars = _extra_template_variables(context, data_dict)
+    return base.render("user/read.html", extra_vars)
 
 
 #def verify_user(token, expiration=EMAIL_VERIFICATION_TOKEN_EXPIRY):
@@ -172,7 +172,7 @@ from . import user
 #        return tk.redirect_to("user.login")
 #
 #
-#users.add_url_rule("/user/<id>", methods=["GET"], view_func=view_user)
+users.add_url_rule("/user/<id>", methods=["GET"], view_func=view_user)
 #users.add_url_rule("/user/register", methods=["POST"], view_func=user.GlaRegisterView.as_view("register"))
 #users.add_url_rule(
 #    "/user/verify/<token>",
