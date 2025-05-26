@@ -145,7 +145,6 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
     plugins.implements(plugins.IConfigurer)
     plugins.implements(plugins.IConfigDeclaration)
     plugins.implements(plugins.IAuthFunctions, inherit=True)
-    #plugins.implements(plugins.IAuthenticator, inherit=True)
     plugins.implements(plugins.IPackageController, inherit=True)
     plugins.implements(plugins.IResourceController, inherit=True)
     plugins.implements(plugins.ITemplateHelpers)
@@ -157,9 +156,6 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
     plugins.implements(plugins.IPermissionLabels)
 
     def get_validators(self) -> dict[str, Validator]:
-        #return {"user_password_validator": auth.user_password_validator,
-        #        "isodate_string" : isodate_string
-        #        }
         return {
             "isodate_string": isodate_string
         }
@@ -544,42 +540,6 @@ class GlaPlugin(plugins.SingletonPlugin, toolkit.DefaultDatasetForm, DefaultPerm
 
     def group_facets(self, facets_dict, *args):
         return dataset_facets_for_user()
-
-    # IAuthenticator
-
-    # Extend the default_authenticate() function
-    # Force username and email to be lowercase when a user tries to login
-    #def authenticate(self, identity: Mapping[str, Any]) -> Optional["User"]:
-    #    if not ("login" in identity and "password" in identity):
-    #        return None
-
-    #    login = identity["login"]
-
-    #    # Force username and email to be lowercase
-    #    user_obj = User.by_name(login.lower())
-
-    #    if not user_obj:
-    #        user_obj = User.by_email(login.lower())
-
-    #    if user_obj is None:
-    #        log.debug("Login failed - username or email %r not found", login)
-    #    elif not user_obj.is_active:
-    #        log.debug("Login as %r failed - user isn't active", login)
-    #    elif not user_obj.validate_password(identity["password"]):
-    #        log.debug("Login as %r failed - password not valid", login)
-    #    #elif not auth.is_email_verified(user_obj):
-    #    #    send_email_verification_link(user_obj)
-    #    #    log.debug("Login as %r failed - email not verified", login)
-    #    #    toolkit.abort(403, _("Email not verified"))
-    #    else:
-    #        return user_obj
-
-    #    signals.failed_login.send(login)
-
-    #    return None
-
-    #def login(self):
-    #    return login.login()
 
     def get_dataset_labels(self, dataset_obj: Any) -> list[str]:
         u'''
