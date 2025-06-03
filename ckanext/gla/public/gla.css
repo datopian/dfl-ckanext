@@ -2177,3 +2177,8 @@ th.govuk-table__cell h3 {
         padding-bottom:11px
     }
 }
+
+.just-validate-error-label {
+ color: var(--t-colors-dark-red);
+ font-size: 14px;
+}
