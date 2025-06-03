@@ -22,14 +22,11 @@ from ckan.plugins.toolkit import get_action
 from ckan.logic.validators import isodate
 
 from . import auth, custom_fields, helpers, search, timestamps, user, views, organization
-#from .email import send_email_verification_link, send_reset_link
 from .search_highlight import (  # query is imported for initialisation, though not explicitly used
     action,
     query,
 )
 from .search_highlight.action import dataset_facets_for_user, GLA_SYSADMIN_FACETS
-
-from .login import ( login )
 
 from flask import has_request_context
 
@@ -47,9 +44,6 @@ def load_config_as_list(key):
 
 TRUSTED_EMAIL_REGEXES = load_config_as_list("dfl.trusted-email-access.regexes")
 TRUSTED_EMAIL_ORG_OPT_OUTS = set(load_config_as_list("dfl.trusted-email-access.optout-org-slugs"))
-
-# Override this function to add a html template to password reset link email
-#Mailer.send_reset_link = send_reset_link
 
 log = logging.getLogger(__name__)
 
