@@ -6,7 +6,6 @@ import ckan
 import ckan.model as model
 from ckan.logic import ActionError
 import ckan.plugins.toolkit as tk
-from . import auth, email
 import ckan.plugins.toolkit as toolkit
 import csv
 from ckan import authz
