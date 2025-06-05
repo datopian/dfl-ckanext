@@ -1,18 +1,13 @@
 {% ckan_extends %}
 
 {% block form %}
-  <form action="" method="post">
+  <form action="" method="post" class="form-validate">
     {{ h.csrf_input() }}
     <div class="form-group">
-      <label for="field-username"><span aria-hidden="true" class="control-required">*</span> {{ _('Email or username') }}</label>
-      <input id="field-username"  class="control-medium form-control" name="user" value="" type="text"
-             autocomplete="username" required="true"/>
+      <label for="field-username"> {{ _('Email or username') }} <span class="small" style="font-weight: normal;">(Required)</span></label>
+      <input id="field-username"  class="control-medium form-control" name="user" value="" type="text" autocomplete="username" required="true"/>
     </div>
     <div class="form-actions">
-      <span aria-hidden="true" class="control-required-message">
-        <span class="control-required">*</span> Required field
-      </span>
-
       {% block form_button %}
       <button class="btn btn-primary" type="submit" name="reset">{{ _("Request Reset") }}</button>
       {% endblock %}
