@@ -95,8 +95,8 @@ def field_type_exists(field_type_name):
         return False
     else:
         raise Exception("An error occurred while checking the field.")
-    
-    
+
+
 def add_field(field_name, field_type):
     api_url = f"{solr_endpoint}/schema/fields"
     field_config = {
@@ -296,7 +296,7 @@ def add_solr_config():
                     }
                 }
                 })
-    
+
     if not field_exists('dfl_res_format_group'):
 
         add_schema({"add-field": {"name": "dfl_res_format_group",
@@ -345,8 +345,22 @@ def add_solr_config():
         )
         add_schema({"add-copy-field": {"source": "title", "dest": ["dfl_title_sort"]}})
         add_schema({"add-field": {"name": "frequency", "type": "text"}})
-    
+
     if not field_exists("notes_with_markup"):
         add_schema({"add-field": {"name": "notes_with_markup", "type": "text"}})
+
+    if not field_type_exists("pdate"):
+        add_schema(
+            {
+                "add-field-type": {
+                    "name": "pdate",
+                    "class": "solr.PointDateField",
+                    "sortMissingLast": True,
+                }
+            }
+        )
+
+    if not field_exists("data_last_modified"):
+        add_field("data_last_modified", "pdate")
 
     add_copy_fields()
